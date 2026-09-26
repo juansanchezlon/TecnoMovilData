@@ -5,88 +5,101 @@ import java.util.Scanner;
 
 public class Main {
 
+    // Códigos ANSI para colores en consola
+    public static final String RESET = "\u001B[0m";
+    public static final String CYAN = "\u001B[36m";
+    public static final String GREEN = "\u001B[32m";
+    public static final String YELLOW = "\u001B[33m";
+    public static final String RED = "\u001B[31m";
+    public static final String BOLD = "\u001B[1m";
+
     public static void main(String[] args) {
-        List<RegistroTransporte> registros = GeneradorDatos.generarDatosSimulados(50);
+        System.out.println(CYAN + "Inicializando sistema y cargando datos simulados..." + RESET);
+        List<RegistroTransporte> registros = GeneradorDatos.generarDatosSimulados(150000); // 150 mil registros
         Scanner scanner = new Scanner(System.in);
         boolean salir = false;
 
-        System.out.println("==================================================");
-        System.out.println("   SISTEMA DE ANÁLISIS DE DATOS - TECNOMÓVIL      ");
-        System.out.println("==================================================");
-
         while (!salir) {
+            System.out.println(BOLD + CYAN + "\n==================================================");
+            System.out.println("   SISTEMA DE ANÁLISIS TECNOMÓVIL DATA v2.0       ");
+            System.out.println("==================================================" + RESET);
+            System.out.println(GREEN + "Datos en memoria: " + registros.size() + " registros procesados." + RESET);
+            
             System.out.println("\nSELECCIONE UNA OPCIÓN:");
             System.out.println("1. Afluencia por Estación (Entradas)");
-            System.out.println("2. Top Horas Pico");
+            System.out.println("2. Top 3 Horas Pico");
             System.out.println("3. Rutas Más Utilizadas");
-            System.out.println("4. Patrones de Viaje por Usuario");
+            System.out.println("4. Patrones de Viaje por Usuario (Muestra de 5)");
             System.out.println("5. Tiempo Promedio entre Estaciones");
             System.out.println("6. Detección de Sobrecarga en Rutas");
-            System.out.println("7. Reporte Consolidado Completo");
-            System.out.println("0. Salir");
-            System.out.print("Opción > ");
+            System.out.println(YELLOW + "7. [NUEVO] Top 5 Usuarios Más Activos" + RESET);
+            System.out.println(YELLOW + "8. [NUEVO] Volumen Total por Estación" + RESET);
+            System.out.println(RED + "0. Salir" + RESET);
+            System.out.print(BOLD + "Opción > " + RESET);
 
             String opcion = scanner.nextLine();
 
             switch (opcion) {
                 case "1":
-                    System.out.println("\n--- AFLUENCIA POR ESTACIÓN ---");
+                    System.out.println(YELLOW + "\n--- AFLUENCIA POR ESTACIÓN ---" + RESET);
                     TecnoMovilDataProcessor.afluenciaPorEstacion(registros)
-                            .forEach((est, cant) -> System.out.printf("Estación: %-12s | Entradas: %d%n", est, cant));
+                            .forEach((est, count) -> System.out.printf("Estación: %-12s | Entradas: %d%n", est, count));
                     break;
-
                 case "2":
-                    System.out.println("\n--- TOP 3 HORAS PICO ---");
+                    System.out.println(YELLOW + "\n--- TOP 3 HORAS PICO ---" + RESET);
                     TecnoMovilDataProcessor.horasPico(registros, 3)
-                            .forEach(e -> System.out.printf("Hora: %02d:00 | Flujo: %d registros%n", e.getKey(), e.getValue()));
+                            .forEach(e -> System.out.printf("Hora: %02d:00 | Flujo: %d pasajeros%n", e.getKey(), e.getValue()));
                     break;
-
                 case "3":
-                    System.out.println("\n--- RUTAS MÁS UTILIZADAS ---");
+                    System.out.println(YELLOW + "\n--- RUTAS MÁS UTILIZADAS ---" + RESET);
                     TecnoMovilDataProcessor.rutasMasUtilizadas(registros)
                             .forEach(e -> System.out.printf("Ruta: %-5s | Registros: %d%n", e.getKey(), e.getValue()));
                     break;
-
                 case "4":
-                    System.out.println("\n--- PATRONES DE VIAJE POR USUARIO ---");
-                    TecnoMovilDataProcessor.patronesDeViaje(registros)
-                            .forEach((usr, ests) -> System.out.printf("Usuario %-3s -> Ruta de estaciones: %s%n", usr, String.join(" -> ", ests)));
+                    System.out.println(YELLOW + "\n--- PATRONES DE VIAJE POR USUARIO ---" + RESET);
+                    TecnoMovilDataProcessor.patronesDeViaje(registros).entrySet().stream().limit(5)
+                            .forEach(e -> System.out.printf("Usuario %-4s -> Ruta: %s%n", e.getKey(), String.join(" -> ", e.getValue())));
                     break;
-
                 case "5":
-                    System.out.println("\n--- TIEMPO PROMEDIO ENTRE ESTACIONES ---");
-                    TecnoMovilDataProcessor.tiempoPromedioEntreEstaciones(registros)
-                            .forEach((usr, prom) -> System.out.printf("Usuario %-3s -> Promedio: %.2f minutos%n", usr, prom));
+                    System.out.println(YELLOW + "\n--- TIEMPO PROMEDIO ENTRE ESTACIONES ---" + RESET);
+                    TecnoMovilDataProcessor.tiempoPromedioEntreEstaciones(registros).entrySet().stream().limit(5)
+                            .forEach(e -> System.out.printf("Usuario %-4s -> Promedio: %.2f min%n", e.getKey(), e.getValue()));
                     break;
-
                 case "6":
-                    System.out.print("Ingrese el umbral de sobrecarga (ej. 10): ");
+                    System.out.print(CYAN + "\nIngrese el umbral de sobrecarga (ej. 35000): " + RESET);
                     try {
                         long umbral = Long.parseLong(scanner.nextLine());
-                        System.out.println("\n--- ESTADO DE SOBRECARGA EN RUTAS ---");
-                        TecnoMovilDataProcessor.detectarSobrecarga(registros, umbral)
-                                .forEach(est -> System.out.printf("Ruta: %-5s | Ocupación: %2d | Estado: %s%n",
-                                        est.ruta(), est.ocupacion(), est.estado()));
-                    } catch (NumberFormatException e) {
-                        System.out.println("Error: Ingrese un valor numérico entero.");
+                        System.out.println(YELLOW + "\n--- ESTADO DE RUTAS ---" + RESET);
+                        TecnoMovilDataProcessor.detectarSobrecarga(registros, umbral).forEach(est -> {
+                            String colorEstado = est.estado().equals("CRÍTICA") ? RED : GREEN;
+                            System.out.printf("Ruta: %-5s | Ocupación: %-6d | Estado: " + colorEstado + "%s" + RESET + "%n", 
+                                    est.ruta(), est.ocupacion(), est.estado());
+                        });
+                    } catch (Exception e) {
+                        System.out.println(RED + "Error: Ingrese un valor numérico." + RESET);
                     }
                     break;
-
                 case "7":
-                    imprimirReporteCompleto(registros);
+                    System.out.println(YELLOW + "\n--- TOP 5 USUARIOS MÁS ACTIVOS ---" + RESET);
+                    TecnoMovilDataProcessor.usuariosMasActivos(registros, 5)
+                            .forEach(e -> System.out.printf("Usuario: %-4s | Viajes registrados: %d%n", e.getKey(), e.getValue()));
                     break;
-
+                case "8":
+                    System.out.println(YELLOW + "\n--- VOLUMEN TOTAL POR ESTACIÓN ---" + RESET);
+                    TecnoMovilDataProcessor.volumenTotalPorEstacion(registros)
+                            .forEach(e -> System.out.printf("Estación: %-12s | Tráfico Total: %d%n", e.getKey(), e.getValue()));
+                    break;
                 case "0":
                     salir = true;
-                    System.out.println("Ejecución finalizada.");
+                    System.out.println(GREEN + "\nApagando sistema... ¡Hasta pronto!" + RESET);
                     break;
-
                 default:
-                    System.out.println("Opción inválida.");
+                    System.out.println(RED + "\nOpción inválida. Intente de nuevo." + RESET);
             }
         }
         scanner.close();
     }
+}
 
     private static void imprimirReporteCompleto(List<RegistroTransporte> registros) {
         System.out.println("\n==================================================");
